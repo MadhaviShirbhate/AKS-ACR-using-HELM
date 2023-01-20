@@ -1,0 +1,108 @@
+trigger: none
+pool:
+ vmimage: 'ubuntu-latest'  
+steps:
+
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    buildType: 'specific'
+    project: '0d9db88f-f97d-4ec4-ae95-cf58e5f2f08e'
+    definition: '12'
+    buildVersionToDownload: 'latest'
+    targetPath: '$(Build.ArtifactStagingDirectory)'
+# - task: replacetokens@5
+#   inputs:
+#     rootDirectory: '$(System.DefaultWorkingDirectory)/DeploymentScripts'
+#     targetFiles: '**/*.config'
+#     encoding: 'auto'
+#     tokenPattern: 'default'
+#     writeBOM: true
+#     actionOnMissing: 'warn'
+#     keepToken: false
+#     actionOnNoFiles: 'continue'
+#     enableTransforms: false
+#     enableRecursion: false
+#     useLegacyPattern: false
+#     enableTelemetry: true
+
+- task: ArchiveFiles@2
+  displayName: 'Archive package'
+  inputs:
+    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/DeploymentScripts'
+    archiveType: tar   
+
+- task: HelmInstaller@0
+  displayName: 'Install Helm '
+  inputs:
+    helmVersion: latest     
+
+
+- task: HelmDeploy@0
+  displayName: 'helm upgrade'
+  inputs:
+    azureSubscriptionForACR: "azureaks"
+    azureResourceGroupForACR: "BuildPushDockerRG"
+    azureContainerRegistry: "dockerregistrydotnet.azurecr.io"
+    connectionType: 'Azure Resource Manager'
+    azureSubscription: 'azureaks'
+    azureResourceGroup: 'BuildPushDockerRG'
+    kubernetesCluster: 'kubernetedocker12'
+    command: 'upgrade'
+    chartType: 'FilePath'
+    releaseName: helm
+    chartPath: '$(Build.ArtifactStagingDirectory)/DeploymentScripts/Chart.yaml'
+    
+        # - task: DownloadPipelineArtifact@2
+        #   inputs:
+        #     buildType: 'specific'
+        #     project: '0d9db88f-f97d-4ec4-ae95-cf58e5f2f08e'
+        #     definition: '12'
+        #     buildVersionToDownload: 'latest'
+        #     # targetPath: '$(System.DefaultWorkingDirectory)'
+        #     targetPath: '$(System.DefaultWorkingDirectory)/DeploymentScripts'
+
+        # - task: ArchiveFiles@2
+        #   displayName: Package
+        #   inputs:
+        #     rootFolderOrFile: '$(System.DefaultWorkingDirectory)/DeploymentScripts'
+        #     includeRootFolder: true
+        #     archiveType: 'tar'
+        #     archiveFile: '$(Build.ArtifactStagingDirectory)/DeploymentScripts'
+        # #     replaceExistingArchive: true
+        # - task: ExtractFiles@1
+        #   inputs:
+        #     archiveFilePatterns: '**/*.zip'
+        #     destinationFolder: '$(Build.ArtifactStagingDirectory)/DeploymentScripts'
+        #     cleanDestinationFolder: true
+        #     overwriteExistingFiles: true
+
+        # - task: ArchiveFiles@2
+        #   displayName: Package
+        #   inputs:
+        #     rootFolderOrFile: '$(System.DefaultWorkingDirectory)/DevOps/AKS/Helm/Chart.yaml'
+        #     archiveType: tar
+        #     archiveFile: '$(System.DefaultWorkingDirectory)/abc.gz'
+        # - task: HelmInstaller@0
+        #   displayName: 'Install Helm'
+        #   inputs:
+        #     helmVersion: latest
+        #     kubectlVersion: 1.10.3
+        #     checkLatestKubectl: false    
+            
+        # - task: HelmDeploy@0
+        #   displayName: helm upgrade
+        #   inputs:
+        #     azureSubscriptionForACR: ""
+        #     azureResourceGroupForACR: "BuildPushDockerRG"
+        #     azureContainerRegistry: "dockerregistrydotnet"
+        #     connectionType: 'Kubernetes Service Connection'
+        #     kubernetesServiceConnection: 'aks12'
+        #     command: 'upgrade'
+        #     chartType: 'FilePath'
+        #     # chartPath: '$(Build.ArtifactStagingDirectory)/DeploymentScripts/Chart.yaml'
+        #     chartPath: '$(System.DefaultWorkingDirectory)/abc.gz'
+        #     chartVersion: 'latest'
+            
+
+        
